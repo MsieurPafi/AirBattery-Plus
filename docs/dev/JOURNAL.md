@@ -1533,3 +1533,15 @@ Une entrée par session, en ajout seulement. Une entrée fausse n'est jamais eff
 
 **Testé sur appareil réel :** non.
 **Prochaine étape :** décision de Côme sur les bulles d'aide du popover ; relancer la mesure `CBPowerSource` les jours suivants.
+
+## 2026-10-31 — Diagnostic : Watch affichée quatre fois avec deux iPhone nommés « iPhone »
+
+**Contexte :** macOS 27.2 (26B123), `main` @ `fdf7ce6`, app installée 1.14.3 (PID 21771). Branche `docs/session-2026-10-30`.
+
+**Fait :**
+- **Capture de Côme** (ancien iPhone rallumé pour être réinitialisé avant la vente) : iPhone, Watch, Watch, iPhone, Watch, Watch. Logs `idevice` de 12:25 à 13:06 : l'iPhone actuel (91 → 90 %) lit la Watch (94 → 93 %) ; l'ancien (89 → 85 %, lu en Wi-Fi à partir de 12:50) n'a pas de montre (« Could not parse Watch battery info » à chaque lecture). **Un seul enregistrement de Watch** : la duplication vient de l'affichage. Le lien enfant → parent passe par le nom ; les deux iPhone s'appellent « iPhone » : `getAll` duplique la Watch sous chacun (×2), `sortForDisplay` (tri `levelDesc` chez Côme) regroupe à nouveau la liste déjà dupliquée (×2). Détails et correctifs possibles dans IDEAS. **Rien de corrigé** : Côme a demandé de ne pas foncer.
+- Bouton Nearcast du popover : les cinq pistes de retour visuel sont consignées dans IDEAS, mises de côté par Côme.
+- Couleurs de la capture : le MacBook Pro est en jaune à 77 % parce que le mode économie d'énergie est actif (`pmset -g` : `lowpowermode 1` ; `getPowerColor` renvoie jaune en mode économie).
+
+**Testé sur appareil réel :** capture de Côme ; aucun changement de code.
+**Prochaine étape :** décision de Côme sur le correctif minimal des doublons (1.x).
