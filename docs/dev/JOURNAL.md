@@ -1521,3 +1521,27 @@ Une entrée par session, en ajout seulement. Une entrée fausse n'est jamais eff
 
 **Testé sur appareil réel :** oui pour l'icône (Côme) ; la mesure porte sur les appareils de Côme.
 **Prochaine étape :** avis de Côme sur la maquette ; publication de l'issue après fusion de cette branche (le lien vers le script vise `main`) ; relancer la mesure les jours suivants.
+
+## 2026-10-30 (suite 5) — Issue `CBPowerSource` publiée, retours sur la maquette
+
+**Contexte :** macOS 27.2 (26B123), `main` @ `fdf7ce6` (PR #83 fusionnée avec l'accord de Côme, CI vert). Branche `docs/session-2026-10-30`.
+
+**Fait :**
+- **Issue [#84](https://github.com/MsieurPafi/AirBattery-Plus/issues/84)** publiée (accord de Côme), en anglais, étiquettes `enhancement` et `help wanted` : appel à mesures avec `scripts/measure-cbpowersource.sh`.
+- **Retours de Côme sur la maquette** (IDEAS) : taille du texte et liste sans carte plutôt en options ; onglet « Apparence » (avec épinglage du Mac en tête) réservé aux 2.x. Séparateurs : le retrait asymétrique de la maquette était voulu (aligné sur le texte, comme les listes macOS), Côme le trouvait décentré. Couleurs : la maquette reprenait le réglage par défaut (« Icône de batterie en couleur » désactivé, `colorfulBattery`, onglet Barre des menus et Dock), le niveau ≤ 10 % en rouge.
+- **Bouton en haut à droite du popover** (antenne, visible seulement avec Nearcast) : redemande les données des autres Mac (`refreshAll`) et recharge la liste 0,5 s après. Sans bulle d'aide ni retour visuel, d'où l'impression qu'il ne fait rien. Correctif 1.x proposé à Côme.
+
+**Testé sur appareil réel :** non.
+**Prochaine étape :** décision de Côme sur les bulles d'aide du popover ; relancer la mesure `CBPowerSource` les jours suivants.
+
+## 2026-10-31 — Diagnostic : Watch affichée quatre fois avec deux iPhone nommés « iPhone »
+
+**Contexte :** macOS 27.2 (26B123), `main` @ `fdf7ce6`, app installée 1.14.3 (PID 21771). Branche `docs/session-2026-10-30`.
+
+**Fait :**
+- **Capture de Côme** (ancien iPhone rallumé pour être réinitialisé avant la vente) : iPhone, Watch, Watch, iPhone, Watch, Watch. Logs `idevice` de 12:25 à 13:06 : l'iPhone actuel (91 → 90 %) lit la Watch (94 → 93 %) ; l'ancien (89 → 85 %, lu en Wi-Fi à partir de 12:50) n'a pas de montre (« Could not parse Watch battery info » à chaque lecture). **Un seul enregistrement de Watch** : la duplication vient de l'affichage. Le lien enfant → parent passe par le nom ; les deux iPhone s'appellent « iPhone » : `getAll` duplique la Watch sous chacun (×2), `sortForDisplay` (tri `levelDesc` chez Côme) regroupe à nouveau la liste déjà dupliquée (×2). **Rien de corrigé** : Côme a demandé de ne pas foncer.
+- Bouton Nearcast du popover : les cinq pistes de retour visuel sont consignées dans IDEAS, mises de côté par Côme.
+- Couleurs de la capture : le MacBook Pro est en jaune à 77 % parce que le mode économie d'énergie est actif (`pmset -g` : `lowpowermode 1` ; `getPowerColor` renvoie jaune en mode économie).
+
+**Testé sur appareil réel :** capture de Côme ; aucun changement de code.
+**Prochaine étape :** décision de Côme sur le correctif minimal des doublons (1.x).
