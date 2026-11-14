@@ -18,7 +18,7 @@ Menu bar:
 - **Dynamic Battery Icon** [on]: the menu bar icon shows this Mac's battery.
 - **Colorful Battery Icon**, **Battery Icon Style** (macOS or iOS), **Show Percentage** (hidden, inside or outside the icon).
 - **Remove Offline Device** [after 20 min]: devices that stop reporting leave the list.
-- **Sort Devices** [Default]: by name, lowest or highest battery first. Also applies to the Dock icon and the widgets.
+- **Sort Devices** [Default]: by name, lowest or highest battery first. Also applies to the Dock icon and the widgets. Your Mac stays at the top.
 - **Hide percentage when above** [90%]: next to the battery icons, the percentage is hidden above this level.
 
 Dock:

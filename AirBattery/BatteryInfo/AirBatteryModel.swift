@@ -17,7 +17,7 @@ struct btdDevice: Codable, Equatable {
     let level: Int
 }
 
-struct Device: Hashable, Codable {
+struct Device: Hashable, Codable, ListedDevice {
     var hasBattery: Bool = true
     var deviceID: String
     var deviceType: String
@@ -100,52 +100,17 @@ class AirBatteryModel {
         let now = Double(Date().timeIntervalSince1970)
         var list = (reverse ? Array(Devices.reversed()) : Devices).filter { (now - $0.lastUpdate < Double(disappearTime * 60)) }
         if !noFilter { list = list.filter { !blackList.containsDeviceName($0.deviceName) && !$0.isHidden } }
-        var newList: [Device] = list.filter({ $0.parentName == thisMac })
-        for d in list {
-            if d.parentName == "" && d.parentName != thisMac {
-                newList.append(d)
-                for sd in list.filter({ $0.parentName == d.deviceName }) {
-                    newList.append(sd)
-                }
-            }
-        }
-        for dd in list.filter({ !newList.contains($0) }) { newList.append(dd) }
-        return newList.filter({ !checkIfBlocked(name: $0.deviceName) })
+        return DeviceOrder.nested(list, thisMac: thisMac).filter({ !checkIfBlocked(name: $0.deviceName) })
     }
     
-    /// Order of the device list in the menu, the Dock and the widget (setting "sortDevices").
-    /// "default" keeps the discovery order. "name", "levelAsc" and "levelDesc" sort groups as a
-    /// whole: an AirPods case with its earbuds, an iPhone with its Watch, an iPad with its
-    /// Pencil. A group's level is its lowest one; devices without a battery go last.
-    /// The Mac's own battery is sorted like any other device.
+    /// Order of the device list in the menu, the Dock and the widget (setting "sortDevices"):
+    /// see DeviceOrder.sorted. This Mac stays first.
     static func sortForDisplay(_ list: [Device], reversed: Bool = false) -> [Device] {
-        let order = ud.string(forKey: "sortDevices") ?? "default"
-        if order == "default" { return list }
-        let thisMac = ud.string(forKey: "deviceName")
-        let names = Set(list.map { $0.deviceName })
-        // Peripherals reported by this Mac carry its name as parent: sort them on their own.
-        func isChild(_ d: Device) -> Bool {
-            return d.parentName != "" && d.parentName != thisMac && names.contains(d.parentName)
-        }
-        var groups: [[Device]] = []
-        for d in list where !isChild(d) {
-            groups.append([d] + list.filter { isChild($0) && $0.parentName == d.deviceName })
-        }
-        func lowestLevel(_ group: [Device]) -> Int? {
-            return group.filter { $0.hasBattery }.map { $0.batteryLevel }.min()
-        }
-        func byName(_ a: [Device], _ b: [Device]) -> Bool {
-            return a[0].deviceName.localizedStandardCompare(b[0].deviceName) == .orderedAscending
-        }
-        groups.sort { a, b in
-            if order == "name" { return byName(a, b) }
-            guard let levelA = lowestLevel(a) else { return false }
-            guard let levelB = lowestLevel(b) else { return true }
-            if levelA != levelB { return order == "levelAsc" ? levelA < levelB : levelA > levelB }
-            return byName(a, b)
-        }
-        if reversed { groups.reverse() }
-        return groups.flatMap { $0 }
+        var thisMac = ud.string(forKey: "deviceName") ?? "Mac" // ib2ab's default
+        #if DEBUG
+        if DemoDevices.enabled { thisMac = DemoDevices.macName }
+        #endif
+        return DeviceOrder.sorted(list, order: ud.string(forKey: "sortDevices") ?? "default", thisMac: thisMac, reversed: reversed)
     }
 
     static func getByName(_ name: String) -> Device? {

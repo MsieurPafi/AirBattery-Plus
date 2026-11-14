@@ -7,6 +7,11 @@ Changes in this fork compared with the official [AirBattery](https://github.com/
 ### Fixes
 
 - **An iPhone read over Bluetooth shows its exact model's icon right away** (iPhone Duo, for instance): the model could arrive before the battery level and be lost, leaving the generic iPhone icon until the next read.
+- **An Apple Watch no longer shows up several times** when two iPhones have the same name (an old iPhone being reset is called "iPhone" again): it appeared under each of them, and twice as many times with a sort order.
+
+### Changes
+
+- **Your Mac stays at the top of the list** whatever the sort order (menu bar, Dock and widgets). It was sorted like any other device.
 
 ## 1.14.3 — 2026-10-30 (pre-release)
 

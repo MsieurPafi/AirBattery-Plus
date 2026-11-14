@@ -29,7 +29,7 @@ Hidden devices are kept in **Settings › Blocklist**. To show only some devices
 
 ## Order of the list
 
-**Settings › Menu Bar & Dock › Sort Devices**: by name, lowest battery first or highest battery first. It also applies to the Dock icon and the widgets. AirPods stay grouped with their case, an Apple Watch with its iPhone, an Apple Pencil with its iPad.
+**Settings › Menu Bar & Dock › Sort Devices**: by name, lowest battery first or highest battery first. It also applies to the Dock icon and the widgets. AirPods stay grouped with their case, an Apple Watch with its iPhone, an Apple Pencil with its iPad. Your Mac's own battery always stays at the top.
 
 Devices that stop reporting are removed after 20 minutes (**Remove Offline Device**).
 

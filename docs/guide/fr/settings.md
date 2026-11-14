@@ -18,7 +18,7 @@ Barre des menus :
 - **Icône de batterie dynamique** [activé] : l'icône de la barre des menus affiche la batterie de ce Mac.
 - **Icône de batterie en couleur**, **Style de l'icône de batterie** (macOS ou iOS), **Afficher le pourcentage** (masqué, dans l'icône ou à côté).
 - **Retirer les appareils hors ligne** [après 20 min] : les appareils qui ne se manifestent plus quittent la liste.
-- **Trier les appareils** [Par défaut] : par nom, batterie la plus faible ou la plus élevée d'abord. S'applique aussi à l'icône du Dock et aux widgets.
+- **Trier les appareils** [Par défaut] : par nom, batterie la plus faible ou la plus élevée d'abord. S'applique aussi à l'icône du Dock et aux widgets. Votre Mac reste en tête.
 - **Masquer le pourcentage au-dessus de** [90 %] : à côté des icônes de batterie, le pourcentage est masqué au-dessus de ce niveau.
 
 Dock :

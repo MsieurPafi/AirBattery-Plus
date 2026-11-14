@@ -16,7 +16,7 @@ Réglages : `MACOSX_DEPLOYMENT_TARGET = 12.0` (D-007), `SWIFT_VERSION = 5.0`, ha
 Dossier `Shared/` (groupe synchronisé, compilé dans les 4 targets) :
 - `AppIdentifiers.swift` (D-006) ;
 - `Log.swift` (`os.Logger`, D-019) ;
-- `Core/` : logique pure, en Foundation seule, testée par `swift test` grâce au `Package.swift` de la racine (D-025). Contenu : `DeviceIdentity`, `BatteryParsing`.
+- `Core/` : logique pure, en Foundation seule, testée par `swift test` grâce au `Package.swift` de la racine (D-025). Contenu : `DeviceIdentity`, `BatteryParsing`, `DeviceOrder` (ordre de la liste : enfants après leur parent, chacun une seule fois ; tri ; ce Mac en tête).
 
 Ressources traduites : String Catalogs `AirBattery/Localizable.xcstrings` (app et widget) et `InfoPlist.xcstrings` (D-022) ; `*.lproj/Credits.rtf`.
 
@@ -42,7 +42,7 @@ Nearcast v2 (D-029, `docs/dev/NEARCAST-V2.md`) : protocole dans `Shared/Core/Nea
 
 ## Identité des appareils
 
-`AirBatteryModel.updateDevice` retrouve un appareil par identifiant d'abord (adresses normalisées), puis par nom, sauf deux UDID différents (`DeviceIdentity.matchIndex`, D-025). Les listes (alertes, épingles, masqués, blocage/autorisation) restent par nom, comparé via `DeviceIdentity.sameName` (suffixe du boîtier des AirPods dans toutes les langues).
+`AirBatteryModel.updateDevice` retrouve un appareil par identifiant d'abord (adresses normalisées), puis par nom, sauf deux UDID différents (`DeviceIdentity.matchIndex`, D-025). Les listes (alertes, épingles, masqués, blocage/autorisation) restent par nom, comparé via `DeviceIdentity.sameName` (suffixe du boîtier des AirPods dans toutes les langues). Le lien enfant → parent (Watch → iPhone, Pencil → iPad, écouteurs → boîtier) passe par `parentName`, un **nom** : deux parents de même nom se partagent les enfants ; `DeviceOrder` place chaque enfant une seule fois, sous le premier (2026-11-14, issue #56).
 
 ## Flux de données
 
