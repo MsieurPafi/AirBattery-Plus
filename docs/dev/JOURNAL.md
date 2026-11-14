@@ -1545,3 +1545,18 @@ Une entrée par session, en ajout seulement. Une entrée fausse n'est jamais eff
 
 **Testé sur appareil réel :** capture de Côme ; aucun changement de code.
 **Prochaine étape :** décision de Côme sur le correctif minimal des doublons (1.x).
+
+## 2026-11-14 — Doublons de la Watch, Mac en tête, diagnostic de l'Apple Vision Pro
+
+**Contexte :** macOS 27.2 (26B123), app installée 1.14.3, aucun nouveau rapport de crash. Branche `fix/device-list-order` (partie de `docs/session-2026-10-30`, PR #85 incluse), PR #86.
+
+**Fait :**
+- **Doublons de la Watch (correctif minimal, accord de Côme) :** ordre de la liste déplacé dans `Shared/Core/DeviceOrder.swift` (`nested` pour `getAll`, `sorted` pour `sortForDisplay`) : chaque appareil n'est placé qu'une fois, sous le premier parent de ce nom. Commentaire en anglais sur l'issue #56 (lien par identifiant, `parentID`, pour le correctif complet).
+- **Ce Mac en tête quel que soit le tri** (demande de Côme) : groupe dont la tête a l'ID `@MacInternalBattery` et le nom de ce Mac (`deviceName`, « Mac » par défaut comme `ib2ab` ; nom de démo en mode démo). Les autres Mac (Nearcast) restent triés. Guide EN/FR et CHANGELOG mis à jour.
+- `swift test` : 38 tests OK (6 nouveaux). Build Debug OK, copie de build désenregistrée, widget de `/Applications` seul enregistré.
+- **Apple Vision Pro affiché avec l'icône Bluetooth (capture de Côme) : cause trouvée, rien de corrigé** (Côme voulait la cause d'abord). `system_profiler` le liste comme connecté en BLE (`device_services = 0x400000 < BLE >`), sans `device_minorType` ni identifiant de produit. Il est donc lu par `BLEBattery.readConnectedPeripherals()` (périphériques BLE que macOS garde connectés, ajouté pour la MX Anywhere 3) : type `getType(nom)` → `general_bt` faute de type dans `system_profiler`. Ce chemin ne découvre que le service `180F` (ligne `discoverServices([CBUUID(string: "180F")])` pour `systemConnectedPeripherals`), jamais `180A` : ni fabricant (`2A29`) ni modèle (`2A24`). Or le chemin `2A24` existant transformerait un modèle Apple en type (« RealityDevice14,1 » → `RealityDevice`), et `getDeviceIcon` a déjà l'icône `visionpro`. Le modèle exact que renvoie le Vision Pro n'est **pas vérifié**. « En charge » vient de l'heuristique BLE (niveau en hausse depuis la lecture précédente).
+- Le diagnostic des doublons a été retiré d'IDEAS à la demande de Côme (il le voulait dans la conversation) ; les cinq pistes de retour visuel du bouton Nearcast y restent.
+
+**Testé sur appareil réel :** non (à vérifier dans le menu avec le tri « batterie la plus élevée d'abord »).
+**Pistes ouvertes :** Vision Pro : découvrir aussi `180A` pour les périphériques déjà connectés, et garder le modèle s'il arrive avant le niveau ou le fabricant (même course que l'iPhone, PR #82).
+**Prochaine étape :** fusion de la PR #86 (CI), puis décision de Côme sur le correctif du Vision Pro.
