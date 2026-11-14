@@ -8,6 +8,7 @@ Changes in this fork compared with the official [AirBattery](https://github.com/
 
 - **An iPhone read over Bluetooth shows its exact model's icon right away** (iPhone Duo, for instance): the model could arrive before the battery level and be lost, leaving the generic iPhone icon until the next read.
 - **An Apple Watch no longer shows up several times** when two iPhones have the same name (an old iPhone being reset is called "iPhone" again): it appeared under each of them, and twice as many times with a sort order.
+- **An Apple Vision Pro shows its own icon** instead of the generic Bluetooth one: for a device macOS keeps connected over Bluetooth LE, the app read only the battery, not the model. A model read before the battery level or the vendor is also no longer lost.
 
 ### Changes
 

@@ -194,6 +194,9 @@ class BLEBattery: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     var otherAppleDevices: Set<UUID> = []
     var bleDevicesLevel: [String:UInt8] = [:]
     var bleDevicesVendor: [String:String] = [:]
+    /// Models of the other BLE devices (Device Information service), by name: the model, the
+    /// vendor and the battery level arrive in any order (see applyReportedModel).
+    var bleDevicesModel: [String:String] = [:]
     /// Models of the iPhones and iPads read over Bluetooth, by name: the model may arrive before
     /// the battery level, when the device isn't listed yet.
     var iosModels: [String:String] = [:]
@@ -296,7 +299,7 @@ class BLEBattery: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
                 if let level = level {
                     peripheral.readValue(for: level)
                 } else {
-                    peripheral.discoverServices([batteryService])
+                    peripheral.discoverServices(connectedPeripheralServices)
                 }
             } else if peripheral.state == .disconnected {
                 centralManager.connect(peripheral, options: nil)
@@ -368,9 +371,9 @@ class BLEBattery: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         peripheral.delegate = self
-        // A device macOS keeps connected only needs its battery service
+        // A device macOS keeps connected only needs its battery and its model
         if systemConnectedPeripherals.contains(peripheral.identifier) {
-            peripheral.discoverServices([CBUUID(string: "180F")])
+            peripheral.discoverServices(connectedPeripheralServices)
         } else {
             peripheral.discoverServices(nil)
         }
@@ -563,6 +566,7 @@ class BLEBattery: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
                     let device = Device(deviceID: peripheral.identifier.uuidString, deviceType: isIOSConnection ? iosType(deviceName) : getType(deviceName), deviceName: deviceName, deviceModel: isIOSConnection ? iosModels[deviceName] : nil, batteryLevel: level, isCharging: charging, lastUpdate: now)
                     AirBatteryModel.updateDevice(device)
                 }
+                if !isIOSConnection { applyReportedModel(deviceName, identifier) }
             }
         }
         
@@ -588,18 +592,9 @@ class BLEBattery: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
                 completeIOSRead(peripheral)
                 return
             }
-            if let data = characteristic.value, let model = data.ascii(), let deviceName = peripheral.name, let vendor = bleDevicesVendor[deviceName] {
-                if vendor == "Apple Inc." && model.contains("Watch") { otherAppleDevices.insert(identifier) }
-                if var device = AirBatteryModel.getByName(deviceName), device.deviceModel != model{
-                    if vendor == "Apple Inc." {
-                        device.deviceType = model.replacingOccurrences(of: ",", with: "").replacingOccurrences(of: "\\d", with: "", options: .regularExpression, range: nil)
-                        device.deviceModel = model
-                    } else {
-                        device.deviceType = getType(deviceName)
-                    }
-                    device.lastUpdate = Date().timeIntervalSince1970
-                    AirBatteryModel.updateDevice(device)
-                }
+            if let data = characteristic.value, let model = data.ascii(), let deviceName = peripheral.name {
+                bleDevicesModel[deviceName] = model
+                applyReportedModel(deviceName, identifier)
             }
         }
         
@@ -607,7 +602,10 @@ class BLEBattery: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         if error == nil && characteristic.uuid == CBUUID(string: "2A29") {
             if let deviceName = peripheral.name {
                 //Apple = Apple Inc.
-                if let data = characteristic.value, let vendor = data.ascii() { bleDevicesVendor[deviceName] = vendor }
+                if let data = characteristic.value, let vendor = data.ascii() {
+                    bleDevicesVendor[deviceName] = vendor
+                    if !isIOSConnection { applyReportedModel(deviceName, identifier) }
+                }
             }
         }
         completeIOSRead(peripheral)
@@ -734,6 +732,25 @@ class BLEBattery: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         return UInt8(level.replacingOccurrences(of: "%", with: "")) ?? 255
     }
     
+    /// Services read on a device macOS keeps connected: battery, and Device Information for its
+    /// model (an Apple Vision Pro kept the generic Bluetooth icon without it).
+    private let connectedPeripheralServices = [CBUUID(string: "180F"), CBUUID(string: "180A")]
+
+    /// Gives an Apple device the type of the model it reported, once its model and vendor are
+    /// both in and it's listed: they arrive in any order, before or after the battery level, and
+    /// a model arriving first was lost. "RealityDevice14,1" gives "RealityDevice", the Vision Pro
+    /// icon. Other vendors keep their type from system_profiler (refreshed at each battery read
+    /// while it's generic): setting it here again could only turn it back into the generic one.
+    func applyReportedModel(_ name: String, _ identifier: UUID) {
+        guard bleDevicesVendor[name] == "Apple Inc.", let model = bleDevicesModel[name] else { return }
+        if model.contains("Watch") { otherAppleDevices.insert(identifier) }
+        guard var device = AirBatteryModel.getByName(name), device.deviceModel != model else { return }
+        device.deviceType = model.replacingOccurrences(of: ",", with: "").replacingOccurrences(of: "\\d", with: "", options: .regularExpression, range: nil)
+        device.deviceModel = model
+        device.lastUpdate = Date().timeIntervalSince1970
+        AirBatteryModel.updateDevice(device)
+    }
+
     /// Type of an iPhone or iPad connected over Bluetooth: from its model once read, else from
     /// its name (it isn't in system_profiler's list, so getType() gave the generic Bluetooth type).
     func iosType(_ name: String) -> String {

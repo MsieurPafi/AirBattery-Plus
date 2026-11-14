@@ -1560,3 +1560,8 @@ Une entrée par session, en ajout seulement. Une entrée fausse n'est jamais eff
 **Testé sur appareil réel :** non (à vérifier dans le menu avec le tri « batterie la plus élevée d'abord »).
 **Pistes ouvertes :** Vision Pro : découvrir aussi `180A` pour les périphériques déjà connectés, et garder le modèle s'il arrive avant le niveau ou le fabricant (même course que l'iPhone, PR #82).
 **Prochaine étape :** fusion de la PR #86 (CI), puis décision de Côme sur le correctif du Vision Pro.
+
+### Suite : correctif du Vision Pro (accord de Côme)
+
+- `BLEBattery` : les périphériques que macOS garde connectés lisent aussi le service `180A` (`connectedPeripheralServices`, à la connexion et quand le niveau n'est pas en cache). Modèle gardé par nom (`bleDevicesModel`) ; `applyReportedModel` donne le type du modèle Apple une fois le fabricant et le modèle connus et l'appareil listé, appelé après `2A24`, `2A29` et chaque lecture de niveau (même course que l'iPhone, PR #82). Les autres fabricants ne passent plus par là : l'ancien chemin `2A24` leur redonnait `getType`, qui ne pouvait que les ramener au type générique ; `2A19` rafraîchit déjà un type générique.
+- Build Debug et `scripts/ci-checks.sh` OK, copie de build désenregistrée. **Non testé avec le Vision Pro** : la valeur de `2A24` (« RealityDevice… » attendu) et celle de `2A29` (« Apple Inc. » attendu) ne sont pas vérifiées. Un Vision Pro déjà connecté garde les services en cache jusqu'au relancement de l'app.
