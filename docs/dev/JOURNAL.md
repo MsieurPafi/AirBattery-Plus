@@ -1521,3 +1521,47 @@ Une entrée par session, en ajout seulement. Une entrée fausse n'est jamais eff
 
 **Testé sur appareil réel :** oui pour l'icône (Côme) ; la mesure porte sur les appareils de Côme.
 **Prochaine étape :** avis de Côme sur la maquette ; publication de l'issue après fusion de cette branche (le lien vers le script vise `main`) ; relancer la mesure les jours suivants.
+
+## 2026-10-30 (suite 5) — Issue `CBPowerSource` publiée, retours sur la maquette
+
+**Contexte :** macOS 27.2 (26B123), `main` @ `fdf7ce6` (PR #83 fusionnée avec l'accord de Côme, CI vert). Branche `docs/session-2026-10-30`.
+
+**Fait :**
+- **Issue [#84](https://github.com/MsieurPafi/AirBattery-Plus/issues/84)** publiée (accord de Côme), en anglais, étiquettes `enhancement` et `help wanted` : appel à mesures avec `scripts/measure-cbpowersource.sh`.
+- **Retours de Côme sur la maquette** (IDEAS) : taille du texte et liste sans carte plutôt en options ; onglet « Apparence » (avec épinglage du Mac en tête) réservé aux 2.x. Séparateurs : le retrait asymétrique de la maquette était voulu (aligné sur le texte, comme les listes macOS), Côme le trouvait décentré. Couleurs : la maquette reprenait le réglage par défaut (« Icône de batterie en couleur » désactivé, `colorfulBattery`, onglet Barre des menus et Dock), le niveau ≤ 10 % en rouge.
+- **Bouton en haut à droite du popover** (antenne, visible seulement avec Nearcast) : redemande les données des autres Mac (`refreshAll`) et recharge la liste 0,5 s après. Sans bulle d'aide ni retour visuel, d'où l'impression qu'il ne fait rien. Correctif 1.x proposé à Côme.
+
+**Testé sur appareil réel :** non.
+**Prochaine étape :** décision de Côme sur les bulles d'aide du popover ; relancer la mesure `CBPowerSource` les jours suivants.
+
+## 2026-10-31 — Diagnostic : Watch affichée quatre fois avec deux iPhone nommés « iPhone »
+
+**Contexte :** macOS 27.2 (26B123), `main` @ `fdf7ce6`, app installée 1.14.3 (PID 21771). Branche `docs/session-2026-10-30`.
+
+**Fait :**
+- **Capture de Côme** (ancien iPhone rallumé pour être réinitialisé avant la vente) : iPhone, Watch, Watch, iPhone, Watch, Watch. Logs `idevice` de 12:25 à 13:06 : l'iPhone actuel (91 → 90 %) lit la Watch (94 → 93 %) ; l'ancien (89 → 85 %, lu en Wi-Fi à partir de 12:50) n'a pas de montre (« Could not parse Watch battery info » à chaque lecture). **Un seul enregistrement de Watch** : la duplication vient de l'affichage. Le lien enfant → parent passe par le nom ; les deux iPhone s'appellent « iPhone » : `getAll` duplique la Watch sous chacun (×2), `sortForDisplay` (tri `levelDesc` chez Côme) regroupe à nouveau la liste déjà dupliquée (×2). **Rien de corrigé** : Côme a demandé de ne pas foncer.
+- Bouton Nearcast du popover : les cinq pistes de retour visuel sont consignées dans IDEAS, mises de côté par Côme.
+- Couleurs de la capture : le MacBook Pro est en jaune à 77 % parce que le mode économie d'énergie est actif (`pmset -g` : `lowpowermode 1` ; `getPowerColor` renvoie jaune en mode économie).
+
+**Testé sur appareil réel :** capture de Côme ; aucun changement de code.
+**Prochaine étape :** décision de Côme sur le correctif minimal des doublons (1.x).
+
+## 2026-11-14 — Doublons de la Watch, Mac en tête, diagnostic de l'Apple Vision Pro
+
+**Contexte :** macOS 27.2 (26B123), app installée 1.14.3, aucun nouveau rapport de crash. Branche `fix/device-list-order` (partie de `docs/session-2026-10-30`, PR #85 incluse), PR #86.
+
+**Fait :**
+- **Doublons de la Watch (correctif minimal, accord de Côme) :** ordre de la liste déplacé dans `Shared/Core/DeviceOrder.swift` (`nested` pour `getAll`, `sorted` pour `sortForDisplay`) : chaque appareil n'est placé qu'une fois, sous le premier parent de ce nom. Commentaire en anglais sur l'issue #56 (lien par identifiant, `parentID`, pour le correctif complet).
+- **Ce Mac en tête quel que soit le tri** (demande de Côme) : groupe dont la tête a l'ID `@MacInternalBattery` et le nom de ce Mac (`deviceName`, « Mac » par défaut comme `ib2ab` ; nom de démo en mode démo). Les autres Mac (Nearcast) restent triés. Guide EN/FR et CHANGELOG mis à jour.
+- `swift test` : 38 tests OK (6 nouveaux). Build Debug OK, copie de build désenregistrée, widget de `/Applications` seul enregistré.
+- **Apple Vision Pro affiché avec l'icône Bluetooth (capture de Côme) : cause trouvée, rien de corrigé** (Côme voulait la cause d'abord). `system_profiler` le liste comme connecté en BLE (`device_services = 0x400000 < BLE >`), sans `device_minorType` ni identifiant de produit. Il est donc lu par `BLEBattery.readConnectedPeripherals()` (périphériques BLE que macOS garde connectés, ajouté pour la MX Anywhere 3) : type `getType(nom)` → `general_bt` faute de type dans `system_profiler`. Ce chemin ne découvre que le service `180F` (ligne `discoverServices([CBUUID(string: "180F")])` pour `systemConnectedPeripherals`), jamais `180A` : ni fabricant (`2A29`) ni modèle (`2A24`). Or le chemin `2A24` existant transformerait un modèle Apple en type (« RealityDevice14,1 » → `RealityDevice`), et `getDeviceIcon` a déjà l'icône `visionpro`. Le modèle exact que renvoie le Vision Pro n'est **pas vérifié**. « En charge » vient de l'heuristique BLE (niveau en hausse depuis la lecture précédente).
+- Le diagnostic des doublons a été retiré d'IDEAS à la demande de Côme (il le voulait dans la conversation) ; les cinq pistes de retour visuel du bouton Nearcast y restent.
+
+**Testé sur appareil réel :** non (à vérifier dans le menu avec le tri « batterie la plus élevée d'abord »).
+**Pistes ouvertes :** Vision Pro : découvrir aussi `180A` pour les périphériques déjà connectés, et garder le modèle s'il arrive avant le niveau ou le fabricant (même course que l'iPhone, PR #82).
+**Prochaine étape :** fusion de la PR #86 (CI), puis décision de Côme sur le correctif du Vision Pro.
+
+### Suite : correctif du Vision Pro (accord de Côme)
+
+- `BLEBattery` : les périphériques que macOS garde connectés lisent aussi le service `180A` (`connectedPeripheralServices`, à la connexion et quand le niveau n'est pas en cache). Modèle gardé par nom (`bleDevicesModel`) ; `applyReportedModel` donne le type du modèle Apple une fois le fabricant et le modèle connus et l'appareil listé, appelé après `2A24`, `2A29` et chaque lecture de niveau (même course que l'iPhone, PR #82). Les autres fabricants ne passent plus par là : l'ancien chemin `2A24` leur redonnait `getType`, qui ne pouvait que les ramener au type générique ; `2A19` rafraîchit déjà un type générique.
+- Build Debug et `scripts/ci-checks.sh` OK, copie de build désenregistrée. **Non testé avec le Vision Pro** : la valeur de `2A24` (« RealityDevice… » attendu) et celle de `2A29` (« Apple Inc. » attendu) ne sont pas vérifiées. Un Vision Pro déjà connecté garde les services en cache jusqu'au relancement de l'app.

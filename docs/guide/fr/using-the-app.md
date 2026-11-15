@@ -29,7 +29,7 @@ Les appareils masqués sont rangés dans **Réglages › Liste de blocage**. Pou
 
 ## Ordre de la liste
 
-**Réglages › Barre des menus et Dock › Trier les appareils** : par nom, batterie la plus faible d'abord ou la plus élevée d'abord. Ce choix s'applique aussi à l'icône du Dock et aux widgets. Les AirPods restent groupés avec leur boîtier, une Apple Watch avec son iPhone, un Apple Pencil avec son iPad.
+**Réglages › Barre des menus et Dock › Trier les appareils** : par nom, batterie la plus faible d'abord ou la plus élevée d'abord. Ce choix s'applique aussi à l'icône du Dock et aux widgets. Les AirPods restent groupés avec leur boîtier, une Apple Watch avec son iPhone, un Apple Pencil avec son iPad. La batterie de votre Mac reste toujours en tête.
 
 Les appareils qui ne se manifestent plus sont retirés au bout de 20 minutes (**Retirer les appareils hors ligne**).
 
